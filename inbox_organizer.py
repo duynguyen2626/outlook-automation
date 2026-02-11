@@ -18,8 +18,8 @@ logger = logging.getLogger(__name__)
 # RULE DEFINITIONS
 RULES = {
     '01_Banking_OTP': {
-        'keywords': ['OTP', 'xác thực', 'mã giao dịch', 'transaction', 'SecureCode', 'verify your account'],
-        'senders': ['@vib.com.vn', '@techcombank.com.vn', '@momo.vn', '@tpbank.com.vn', 'noreply@google.com'],
+        'keywords': ['OTP', 'xác thực', 'mã giao dịch', 'transaction', 'SecureCode', 'verify your account', 'THONG BAO GIAO DICH PHAT SINH'],
+        'senders': ['@vib.com.vn', '@techcombank.com.vn', '@momo.vn', '@tpbank.com.vn', 'info@sacombank.com.vn', 'noreply@google.com'],
     },
     '02_Statements': {
         'keywords': ['sao kê', 'statement', 'phiếu báo', 'biên lai', 'ebill', 'hóa đơn', 'invoice', 'payment receipt'],
