@@ -1,0 +1,20 @@
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# O365 Token (Keep this local only, secret in GitHub Actions)
+o365_token.txt
+
+# VS Code
+.vscode/
