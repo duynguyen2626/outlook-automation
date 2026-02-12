@@ -12,66 +12,93 @@ CLIENT_ID = os.environ.get('CLIENT_ID', '1e2438e2-8dd6-414a-a9be-69bc182b438b')
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# RULE DEFINITIONS
-# 'target' can be 'folder' or 'parent/child'
+# =================================================================================================
+# FILTER RULES (PRIORITY ORDER - LOWER NUMBER = HIGHER PRIORITY)
+# =================================================================================================
 RULES = [
-    # --- 01 BANKING OTP & TRANSACTIONS (Ưu tiên chia theo bank) ---
+    # ========== PRIORITY 1: STATEMENTS (MOST SPECIFIC) ==========
     {
-        'target': '01_Banking_OTP/VIB',
-        'keywords': ['GIAO DICH', 'THAY DOI THIET BI', 'Mã xác thực'],
-        'senders': ['@vib.com.vn']
-    },
-    {
-        'target': '01_Banking_OTP/Sacombank',
-        'keywords': ['THONG BAO GIAO DICH PHAT SINH', 'SACOMBANK'],
-        'senders': ['info@sacombank.com.vn']
-    },
-    # ... (các bank khác) ...
-    {
-        'target': '01_Banking_OTP/Techcombank',
-        'keywords': ['Techcombank', 'TCB', '[TCB] PAN:', 'Mã xác thực'],
-        'senders': ['@techcombank.com.vn', 'srv.notihub.mail@techcombank.com.vn']
-    },
-    {
-        'target': '01_Banking_OTP/TPBank',
-        'keywords': ['TPBank'],
-        'senders': ['@tpbank.com.vn']
-    },
-    {
-        'target': '01_Banking_OTP/Momo',
-        'keywords': ['Momo'],
-        'senders': ['@momo.vn']
-    },
-
-    # --- 02 STATEMENTS (Chỉ dành cho SAO KÊ và DƯ NỢ) ---
-    {
+        'name': 'VIB_SuperCard_Statement',
         'target': '02_Statements/VIB/SuperCard',
-        'keywords': ['SUPER CARD', 'DƯ NỢ'],
-        'senders': ['info@card.vib.com.vn']
+        'keywords': ['SAO KE', 'SUPER CARD'],
+        'senders': ['info@card.vib.com.vn'],
+        'priority': 1
     },
     {
+        'name': 'VIB_OnlinePlus_Statement',
         'target': '02_Statements/VIB/OnlinePlus',
-        'keywords': ['ONLINE PLUS', 'DƯ NỢ'],
-        'senders': ['info@card.vib.com.vn']
+        'keywords': ['SAO KE', 'ONLINE PLUS'],
+        'senders': ['info@card.vib.com.vn'],
+        'priority': 1
     },
     {
+        'name': 'VIB_TravelElite_Statement',
         'target': '02_Statements/VIB/TravelElite',
-        'keywords': ['TRAVEL ELITE', 'TRAVEL ÉLITE', 'DƯ NỢ'],
-        'senders': ['info@card.vib.com.vn']
-    },
-    {
-        'target': '02_Statements',
-        'keywords': ['sao kê', 'statement', 'phiếu báo', 'biên lai', 'ebill', 'hóa đơn', 'invoice', 'payment receipt'],
-        'senders': []
+        'keywords': ['SAO KE', 'TRAVEL ELITE', 'TRAVEL ÉLITE'],
+        'senders': ['info@card.vib.com.vn'],
+        'priority': 1
     },
     
-    # --- 03 NOTIFICATIONS ---
+    # ========== PRIORITY 2: VIB TRANSACTIONS (LESS SPECIFIC) ==========
     {
+        'name': 'VIB_Transactions',
+        'target': '01_Banking_OTP/VIB',
+        'keywords': ['GIAO DICH', 'THAY DOI THIET BI', 'OTP', 'THONG BAO'],
+        'senders': ['@vib.com.vn'],
+        'priority': 2
+    },
+    
+    # ========== PRIORITY 3: OTHER BANKS ==========
+    {
+        'name': 'Sacombank_Transactions',
+        'target': '01_Banking_OTP/Sacombank',
+        'keywords': ['THONG BAO GIAO DICH', 'SACOMBANK'],
+        'senders': ['info@sacombank.com.vn'],
+        'priority': 3
+    },
+    {
+        'name': 'Techcombank_Transactions',
+        'target': '01_Banking_OTP/Techcombank',
+        'keywords': ['Techcombank', 'TCB', '[TCB] PAN:', 'Ma xac thuc'],
+        'senders': ['@techcombank.com.vn', 'srv.notihub.mail@techcombank.com.vn'],
+        'priority': 3
+    },
+    {
+        'name': 'TPBank_Transactions',
+        'target': '01_Banking_OTP/TPBank',
+        'keywords': ['TPBank'],
+        'senders': ['@tpbank.com.vn'],
+        'priority': 3
+    },
+    {
+        'name': 'Momo_Transactions',
+        'target': '01_Banking_OTP/Momo',
+        'keywords': ['Momo'],
+        'senders': ['@momo.vn'],
+        'priority': 3
+    },
+    
+    # ========== PRIORITY 4: GENERAL STATEMENTS ==========
+    {
+        'name': 'General_Statements',
+        'target': '02_Statements',
+        'keywords': ['sao ke', 'statement', 'phieu bao', 'bien lai', 'ebill', 'hoa don', 'invoice', 'payment receipt'],
+        'senders': [],
+        'priority': 4
+    },
+    
+    # ========== PRIORITY 5: APP NOTIFICATIONS ==========
+    {
+        'name': 'App_Notifications',
         'target': '03_Apps_Notifications',
-        'keywords': ['notification', 'alert', 'digest', 'bảo mật', 'đăng nhập', 'security alert', 'login alert'],
-        'senders': ['@github.com', '@facebookmail.com', 'no-reply', 'noreply', '@trello.com', '@slack.com', '@jira.com', '@atlassian.net']
+        'keywords': ['notification', 'alert', 'digest', 'bao mat', 'dang nhap', 'security alert', 'login alert'],
+        'senders': ['@github.com', '@facebookmail.com', 'no-reply', 'noreply', '@trello.com', '@slack.com', '@jira.com', '@atlassian.net'],
+        'priority': 5
     }
 ]
+
+# Sort rules by priority
+RULES.sort(key=lambda x: x['priority'])
 
 def setup_token_from_env():
     env_token = os.environ.get('O365_TOKEN')
@@ -118,79 +145,108 @@ def get_or_create_folder(root_folder, path_str):
     return current_folder
 
 def check_rule(message, rule):
-    # Lấy thông tin mail
-    sender = message.sender.address.lower() if message.sender else ""
-    subject = message.subject.lower() if message.subject else ""
-    
-    # Logic mới: Nếu rule có cả sender và keywords, PHẢI thỏa mãn cả hai (hoặc 1 trong các sender VÀ 1 trong các keyword)
-    # Nếu chỉ có 1 cái thì chỉ check cái đó.
-    
-    match_sender = True
-    if rule['senders']:
-        match_sender = any(s.lower() in sender for s in rule['senders'])
+    """Check if a message matches a rule (case-insensitive)"""
+    try:
+        sender = message.sender.address.lower() if message.sender else ""
+        subject = message.subject.upper() if message.subject else ""
         
-    match_keyword = True
-    if rule['keywords']:
-        match_keyword = any(k.lower() in subject for k in rule['keywords'])
+        # Check sender match
+        match_sender = True
+        if rule['senders']:
+            match_sender = any(s.lower() in sender for s in rule['senders'])
         
-    return match_sender and match_keyword
+        # Check keyword match (case-insensitive)
+        match_keyword = True
+        if rule['keywords']:
+            match_keyword = any(k.upper() in subject for k in rule['keywords'])
+        
+        return match_sender and match_keyword
+    except Exception as e:
+        logger.error(f"Error checking rule: {e}")
+        return False
 
-def organize_inbox(account):
+def organize_inbox(account, batch_size=200):
+    """
+    Organize inbox with batching for GitHub Actions
+    Processes emails in batches to avoid timeout and memory issues
+    """
     mailbox = account.mailbox()
     inbox = mailbox.inbox_folder()
     
-    print("--- ĐANG QUÉT TOÀN BỘ INBOX ---")
-    
-    # Lấy tổng số mail để tính % (nếu có thể)
-    try:
-        total_count = inbox.get_messages(limit=1).count
-        print(f"Tổng số mail dự kiến: {total_count}")
-    except:
-        total_count = 0
-        print("Đang quét mail...")
-
-    # Sử dụng generator để tiết kiệm bộ nhớ
-    query = inbox.get_messages(limit=None, download_attachments=False)
+    logger.info("=" * 80)
+    logger.info("INBOX ORGANIZER - GITHUB ACTIONS MODE")
+    logger.info("=" * 80)
+    logger.info(f"Batch size: {batch_size}")
+    logger.info("=" * 80)
     
     folder_cache = {}
     count_processed = 0
     count_moved = 0
     count_failed = 0
     
-    for msg in query:
-        count_processed += 1
+    try:
+        # Get messages (newest first, limited batch)
+        # For GitHub Actions, we process a fixed batch daily
+        query = inbox.get_messages(
+            limit=batch_size,
+            download_attachments=False,
+            order_by='receivedDateTime desc'
+        )
         
-        # In progress gọn nhẹ trên cùng 1 dòng
-        if total_count > 0:
-            percent = (count_processed / total_count) * 100
-            print(f"\rTiến độ: {percent:.1f}% ({count_processed}/{total_count}) | Đã di chuyển: {count_moved} | Lỗi: {count_failed}", end="", flush=True)
-        else:
-            print(f"\rĐã quét: {count_processed} | Đã di chuyển: {count_moved} | Lỗi: {count_failed}", end="", flush=True)
-
-        found_rule = False
-        for rule in RULES:
-            if check_rule(msg, rule):
-                target_path = rule['target']
-                
-                if target_path not in folder_cache:
-                    folder_cache[target_path] = get_or_create_folder(inbox, target_path)
-                
-                target_folder = folder_cache[target_path]
-                
-                if target_folder:
-                    try:
-                        if msg.move(target_folder):
-                            count_moved += 1
-                            found_rule = True
-                            break 
-                    except Exception:
-                        count_failed += 1
-                        break
+        messages = list(query)
+        total = len(messages)
         
-    print(f"\n\nHOÀN TẤT!")
-    print(f"- Tổng số mail đã quét: {count_processed}")
-    print(f"- Số mail được di chuyển: {count_moved}")
-    print(f"- Số mail gặp lỗi: {count_failed}")
+        logger.info(f"Retrieved {total} messages to process")
+        
+        if total == 0:
+            logger.info("Inbox is clean! No messages to process.")
+            return
+        
+        # Process each message
+        for idx, msg in enumerate(messages, 1):
+            count_processed += 1
+            
+            # Progress indicator
+            if idx % 10 == 0:
+                logger.info(f"Progress: {idx}/{total} | Moved: {count_moved} | Failed: {count_failed}")
+            
+            # Check against rules (in priority order)
+            matched = False
+            for rule in RULES:
+                if check_rule(msg, rule):
+                    target_path = rule['target']
+                    
+                    # Get or create target folder (with caching)
+                    if target_path not in folder_cache:
+                        folder_cache[target_path] = get_or_create_folder(inbox, target_path)
+                    
+                    target_folder = folder_cache[target_path]
+                    
+                    if target_folder:
+                        try:
+                            if msg.move(target_folder):
+                                count_moved += 1
+                                matched = True
+                                logger.debug(f"Moved: '{msg.subject[:50]}...' -> {target_path}")
+                                break  # Stop checking rules once matched
+                        except Exception as e:
+                            logger.error(f"Error moving message: {e}")
+                            count_failed += 1
+                            break
+        
+        # Final summary
+        logger.info("\n" + "=" * 80)
+        logger.info("SUMMARY")
+        logger.info("=" * 80)
+        logger.info(f"Total processed: {count_processed}")
+        logger.info(f"Total moved: {count_moved}")
+        logger.info(f"Total failed: {count_failed}")
+        logger.info(f"Success rate: {(count_moved / count_processed * 100) if count_processed > 0 else 0:.1f}%")
+        logger.info("=" * 80)
+        
+    except Exception as e:
+        logger.error(f"Error during inbox organization: {e}", exc_info=True)
+        raise
 
 def main():
     account = get_account()

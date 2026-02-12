@@ -16,5 +16,9 @@ venv.bak/
 # O365 Token (Keep this local only, secret in GitHub Actions)
 o365_token.txt
 
+# Organizer state and logs
+.organizer_state.json
+organizer.log
+
 # VS Code
 .vscode/
