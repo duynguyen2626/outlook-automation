@@ -28,8 +28,8 @@ RULES = [
     },
     {
         'target': '01_Banking_OTP/Techcombank',
-        'keywords': ['Techcombank', 'TCB'],
-        'senders': ['@techcombank.com.vn']
+        'keywords': ['Techcombank', 'TCB', '[TCB] PAN:', 'Mã xác thực'],
+        'senders': ['@techcombank.com.vn', 'srv.notihub.mail@techcombank.com.vn']
     },
     {
         'target': '01_Banking_OTP/TPBank',
