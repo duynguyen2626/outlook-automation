@@ -17,15 +17,16 @@ logger = logging.getLogger(__name__)
 RULES = [
     # --- 01 BANKING OTP & TRANSACTIONS (Ưu tiên chia theo bank) ---
     {
+        'target': '01_Banking_OTP/VIB',
+        'keywords': ['GIAO DICH', 'THAY DOI THIET BI', 'Mã xác thực'],
+        'senders': ['@vib.com.vn']
+    },
+    {
         'target': '01_Banking_OTP/Sacombank',
         'keywords': ['THONG BAO GIAO DICH PHAT SINH', 'SACOMBANK'],
         'senders': ['info@sacombank.com.vn']
     },
-    {
-        'target': '01_Banking_OTP/VIB',
-        'keywords': ['VIB'],
-        'senders': ['@vib.com.vn']
-    },
+    # ... (các bank khác) ...
     {
         'target': '01_Banking_OTP/Techcombank',
         'keywords': ['Techcombank', 'TCB', '[TCB] PAN:', 'Mã xác thực'],
@@ -41,26 +42,21 @@ RULES = [
         'keywords': ['Momo'],
         'senders': ['@momo.vn']
     },
-    {
-        'target': '01_Banking_OTP', # Các mail OTP khác không thuộc bank trên
-        'keywords': ['OTP', 'xác thực', 'mã giao dịch', 'transaction', 'SecureCode', 'verify your account'],
-        'senders': ['noreply@google.com']
-    },
-    
-    # --- 02 STATEMENTS (Chi tiết cho VIB) ---
+
+    # --- 02 STATEMENTS (Chỉ dành cho SAO KÊ và DƯ NỢ) ---
     {
         'target': '02_Statements/VIB/SuperCard',
-        'keywords': ['SAO KE THE TIN DUNG VIB SUPER CARD THANG', 'SAO KE DIEM THUONG THE TIN DUNG VIB SUPER CARD'],
+        'keywords': ['SUPER CARD', 'DƯ NỢ'],
         'senders': ['info@card.vib.com.vn']
     },
     {
         'target': '02_Statements/VIB/OnlinePlus',
-        'keywords': ['VIB ONLINE PLUS 2IN1'],
+        'keywords': ['ONLINE PLUS', 'DƯ NỢ'],
         'senders': ['info@card.vib.com.vn']
     },
     {
         'target': '02_Statements/VIB/TravelElite',
-        'keywords': ['TRAVEL ÉLITE', 'TRAVEL ELITE'],
+        'keywords': ['TRAVEL ELITE', 'TRAVEL ÉLITE', 'DƯ NỢ'],
         'senders': ['info@card.vib.com.vn']
     },
     {
@@ -122,56 +118,79 @@ def get_or_create_folder(root_folder, path_str):
     return current_folder
 
 def check_rule(message, rule):
-    # Check Senders
+    # Lấy thông tin mail
     sender = message.sender.address.lower() if message.sender else ""
-    for s in rule['senders']:
-        if s.lower() in sender:
-            return True
-            
-    # Check Keywords in Subject
     subject = message.subject.lower() if message.subject else ""
-    for k in rule['keywords']:
-        if k.lower() in subject:
-            return True
-            
-    return False
+    
+    # Logic mới: Nếu rule có cả sender và keywords, PHẢI thỏa mãn cả hai (hoặc 1 trong các sender VÀ 1 trong các keyword)
+    # Nếu chỉ có 1 cái thì chỉ check cái đó.
+    
+    match_sender = True
+    if rule['senders']:
+        match_sender = any(s.lower() in sender for s in rule['senders'])
+        
+    match_keyword = True
+    if rule['keywords']:
+        match_keyword = any(k.lower() in subject for k in rule['keywords'])
+        
+    return match_sender and match_keyword
 
 def organize_inbox(account):
     mailbox = account.mailbox()
     inbox = mailbox.inbox_folder()
     
-    logger.info("Scanning Inbox for unorganized emails...")
+    print("--- ĐANG QUÉT TOÀN BỘ INBOX ---")
     
-    # Lấy 100 mail mới nhất (Inbox của user đã được dọn trống ở bước Reset nên 100 là đủ)
-    messages = list(inbox.get_messages(limit=100, download_attachments=False))
-    
-    # Cache folders
-    folder_cache = {}
+    # Lấy tổng số mail để tính % (nếu có thể)
+    try:
+        total_count = inbox.get_messages(limit=1).count
+        print(f"Tổng số mail dự kiến: {total_count}")
+    except:
+        total_count = 0
+        print("Đang quét mail...")
 
+    # Sử dụng generator để tiết kiệm bộ nhớ
+    query = inbox.get_messages(limit=None, download_attachments=False)
+    
+    folder_cache = {}
+    count_processed = 0
     count_moved = 0
-    for msg in messages:
-        moved = False
+    count_failed = 0
+    
+    for msg in query:
+        count_processed += 1
+        
+        # In progress gọn nhẹ trên cùng 1 dòng
+        if total_count > 0:
+            percent = (count_processed / total_count) * 100
+            print(f"\rTiến độ: {percent:.1f}% ({count_processed}/{total_count}) | Đã di chuyển: {count_moved} | Lỗi: {count_failed}", end="", flush=True)
+        else:
+            print(f"\rĐã quét: {count_processed} | Đã di chuyển: {count_moved} | Lỗi: {count_failed}", end="", flush=True)
+
+        found_rule = False
         for rule in RULES:
             if check_rule(msg, rule):
                 target_path = rule['target']
                 
-                # Lấy folder từ cache hoặc tạo mới
                 if target_path not in folder_cache:
                     folder_cache[target_path] = get_or_create_folder(inbox, target_path)
                 
                 target_folder = folder_cache[target_path]
                 
                 if target_folder:
-                    logger.info(f"Moving '{msg.subject}' -> {target_path}")
                     try:
                         if msg.move(target_folder):
                             count_moved += 1
-                            moved = True
-                            break # Move once per message
-                    except Exception as e:
-                        logger.error(f"Error moving message: {e}")
+                            found_rule = True
+                            break 
+                    except Exception:
+                        count_failed += 1
+                        break
         
-    logger.info(f"Organization complete. Moved {count_moved} emails.")
+    print(f"\n\nHOÀN TẤT!")
+    print(f"- Tổng số mail đã quét: {count_processed}")
+    print(f"- Số mail được di chuyển: {count_moved}")
+    print(f"- Số mail gặp lỗi: {count_failed}")
 
 def main():
     account = get_account()

@@ -155,6 +155,73 @@ def cleanup_folders(account):
         print("Có thể folder tên khác hoặc không nằm trực tiếp trong Inbox.")
     print("Hoàn tất dọn dẹp!\n")
 
+def reset_folder_01(account):
+    print("--- RESET FOLDER 01_Banking_OTP ---")
+    mailbox = account.mailbox()
+    inbox = mailbox.inbox_folder()
+    
+    # Tìm folder 01_Banking_OTP
+    folder_01 = None
+    for f in inbox.get_folders(limit=100):
+        if f.name == '01_Banking_OTP':
+            folder_01 = f
+            break
+            
+    if not folder_01:
+        print("Không tìm thấy folder 01_Banking_OTP bên trong Inbox.")
+        return
+
+    print("Đang lấy danh sách mail từ folder 01 (Max 500 mail)...")
+    messages = list(folder_01.get_messages(limit=500))
+    count = len(messages)
+    
+    if count == 0:
+        print("Folder 01 đang trống.")
+        return
+
+    print(f"Tìm thấy {count} emails. Đang di chuyển ngược lại INBOX để làm sạch...")
+    moved_count = 0
+    for msg in messages:
+        try:
+            if msg.move(inbox):
+                moved_count += 1
+        except Exception as e:
+            print(f"Lỗi khi move mail '{msg.subject}': {e}")
+            
+    print(f"Đã di chuyển xong {moved_count}/{count} emails về Inbox.")
+    print("Hoàn tất reset!\n")
+
+def hard_reset_all(account):
+    print("--- HARD RESET: DI CHUYỂN TẤT CẢ MAIL VỀ INBOX ---")
+    mailbox = account.mailbox()
+    inbox = mailbox.inbox_folder()
+    
+    managed_folders = ['01_Banking_OTP', '02_Statements', '03_Apps_Notifications']
+    
+    def clear_recursive(folder):
+        print(f"Đang quét folder: {folder.name}...")
+        # Move messages
+        messages = list(folder.get_messages(limit=None))
+        if messages:
+            print(f"  -> Đang chuyển {len(messages)} mail...")
+            for msg in messages:
+                try:
+                    msg.move(inbox)
+                except:
+                    pass
+        
+        # Subfolders
+        subfolders = list(folder.get_folders(limit=50))
+        for sub in subfolders:
+            clear_recursive(sub)
+
+    for f_name in managed_folders:
+        f = inbox.get_folder(folder_name=f_name)
+        if f:
+            clear_recursive(f)
+            
+    print("\n--- HOÀN TẤT RESET TỔNG THỂ ---")
+
 def menu():
     print("====================================")
     print("     OUTLOOK MANAGER (GRAPH API)    ")
@@ -162,9 +229,10 @@ def menu():
     print("1. Liệt kê folders hiện có")
     print("2. Tạo các folder chuẩn (OTP, Statement, App)")
     print("3. Dọn dẹp folder cũ & di chuyển mail về Inbox")
-    print("4. Thoát")
+    print("4. RESET TẤT CẢ: Đưa mọi mail về lại Inbox (Làm lại từ đầu)")
+    print("5. Thoát")
     print("====================================")
-    return input("Chọn chức năng (1-4): ")
+    return input("Chọn chức năng (1-5): ")
 
 def main():
     account = get_account()
@@ -182,6 +250,8 @@ def main():
             if confirm.lower() == 'y':
                 cleanup_folders(account)
         elif choice == '4':
+             hard_reset_all(account)
+        elif choice == '5':
             print("Tạm biệt!")
             break
         else:
