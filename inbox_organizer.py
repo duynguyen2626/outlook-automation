@@ -47,7 +47,22 @@ RULES = [
         'senders': ['noreply@google.com']
     },
     
-    # --- 02 STATEMENTS ---
+    # --- 02 STATEMENTS (Chi tiết cho VIB) ---
+    {
+        'target': '02_Statements/VIB/SuperCard',
+        'keywords': ['SAO KE THE TIN DUNG VIB SUPER CARD THANG', 'SAO KE DIEM THUONG THE TIN DUNG VIB SUPER CARD'],
+        'senders': ['info@card.vib.com.vn']
+    },
+    {
+        'target': '02_Statements/VIB/OnlinePlus',
+        'keywords': ['VIB ONLINE PLUS 2IN1'],
+        'senders': ['info@card.vib.com.vn']
+    },
+    {
+        'target': '02_Statements/VIB/TravelElite',
+        'keywords': ['TRAVEL ÉLITE', 'TRAVEL ELITE'],
+        'senders': ['info@card.vib.com.vn']
+    },
     {
         'target': '02_Statements',
         'keywords': ['sao kê', 'statement', 'phiếu báo', 'biên lai', 'ebill', 'hóa đơn', 'invoice', 'payment receipt'],
