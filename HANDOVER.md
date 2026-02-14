@@ -1,6 +1,25 @@
 # Outlook Automation - Project Handover
 
-## 📌 Hiện trạng dự án
+## � LATEST UPDATE: Type Error Fix (2026-02-14)
+
+### Issue Fixed
+Type mismatch in `clean-mail-next/components/dashboard/bulk-organizer.tsx` prevented TypeScript compilation.
+
+### Changes
+✅ Fixed `executeMove()` passing wrong parameter format to `moveBatch()`  
+✅ Added MultiSelect and Popover UI components  
+✅ Enhanced with tag management (Replace/Add/Remove modes)  
+✅ All TypeScript checks passing  
+
+### Next Phase
+- Code review & merge
+- E2E testing
+- Deployment
+- See `BULK_ORGANIZER_FIX.md` for details
+
+---
+
+## �📌 Hiện trạng dự án
 Dự án đã thiết lập thành công nền tảng để quản lý Outlook Inbox bằng **Microsoft Graph API** và đã được tối ưu hóa để xử lý lượng mail lớn (8000+).
 
 ### Những gì đã làm được:
