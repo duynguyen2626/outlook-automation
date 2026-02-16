@@ -7,7 +7,9 @@ export interface Rule {
         keywords?: string[]
         senders?: string[]
         exclude_keywords?: string[]
+        must_be_read?: boolean
     }
+    categories?: string[]
     is_active: boolean
     source_folder?: string
 }
@@ -22,4 +24,18 @@ export interface ExecutionLog {
     status: 'moved' | 'failed' | 'skipped'
     error_message?: string
     processed_at: string
+}
+
+declare module "next-auth" {
+    interface Session {
+        user?: {
+            id?: string
+            email?: string
+            name?: string
+            image?: string
+        }
+        accessToken?: string
+        refreshToken?: string
+        expiresAt?: number
+    }
 }

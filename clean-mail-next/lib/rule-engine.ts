@@ -1,12 +1,25 @@
 import { Rule } from "@/types"
 
-export function checkRule(subject: string, sender: string, senderName: string, rule: Rule): boolean {
-    // Normalize everything to NFC for consistent comparison
-    const normalize = (str: string) => str ? str.normalize('NFC').toUpperCase() : ""
+export function checkRule(subject: string, sender: string, senderName: string, isRead: boolean, rule: Rule): boolean {
+    // Normalize for accent-insensitive and whitespace-stable matching
+    const normalize = (str: string) => {
+        if (!str) return ""
+        return str
+            .normalize('NFKD')
+            .replace(/[\u200B-\u200D\uFEFF]/g, "")
+            .replace(/\u00A0/g, " ")
+            .replace(/\p{M}/gu, "")
+            .replace(/\s+/g, " ")
+            .trim()
+            .toUpperCase()
+    }
 
     const subjectNorm = normalize(subject)
     const senderNorm = normalize(sender)
     const senderNameNorm = normalize(senderName)
+
+    // Check must_be_read
+    if (rule.conditions.must_be_read && !isRead) return false
 
     // Check Sender
     if (rule.conditions.senders && rule.conditions.senders.length > 0) {
