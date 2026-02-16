@@ -1,4 +1,4 @@
-import { auth } from "@/auth"
+import { auth, signOut } from "@/auth"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
@@ -42,9 +42,9 @@ export default async function DashboardLayout({
                     </div>
                     <form action={async () => {
                         'use server';
-                        // await signOut(); // Need to import signOut from auth
+                        await signOut({ redirectTo: "/" })
                     }}>
-                        <Button variant="outline" className="w-full justify-start gap-2">
+                        <Button variant="outline" className="w-full justify-start gap-2" type="submit">
                             <LogOut className="w-4 h-4" /> Sign Out
                         </Button>
                     </form>
