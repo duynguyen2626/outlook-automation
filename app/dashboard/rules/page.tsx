@@ -4,6 +4,7 @@ import { Plus } from "lucide-react"
 import { RuleCard } from "@/components/dashboard/rule-card"
 import { CreateRuleButton } from "@/components/dashboard/create-rule-button"
 import { RuleDebugger } from "@/components/dashboard/rule-debugger"
+import { RulesToolbar } from "@/components/dashboard/rules-toolbar"
 
 export const dynamic = 'force-dynamic'
 
@@ -19,6 +20,8 @@ export default async function RulesPage() {
                 </div>
                 <CreateRuleButton />
             </div>
+
+            <RulesToolbar />
 
             {/* Debug Section */}
             {rules && rules.length > 0 && (

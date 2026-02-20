@@ -1,5 +1,5 @@
 import NextAuth from "next-auth"
-import AzureADProvider from "next-auth/providers/azure-ad"
+import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id"
 import { SupabaseAdapter } from "@auth/supabase-adapter"
 import { supabase } from "@/lib/supabase"
 
@@ -13,10 +13,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         maxAge: 30 * 24 * 60 * 60, // 30 days
     },
     providers: [
-        AzureADProvider({
+        MicrosoftEntraID({
+            id: "azure-ad",
             clientId: process.env.AZURE_AD_CLIENT_ID,
             clientSecret: process.env.AZURE_AD_CLIENT_SECRET,
-            tenantId: process.env.AZURE_AD_TENANT_ID,
+            issuer: `https://login.microsoftonline.com/${process.env.AZURE_AD_TENANT_ID}/v2.0`,
             authorization: {
                 params: {
                     scope: "openid profile email offline_access Mail.ReadWrite Mail.Send User.Read",
@@ -27,7 +28,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     callbacks: {
         async jwt({ token, account }) {
             if (account) {
-                // Store tokens in database via adapter, not in JWT
                 token.sub = account.providerAccountId
             }
             return token
@@ -46,12 +46,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 session.refreshToken = account.data.refresh_token
                 session.expiresAt = account.data.expires_at
             }
-            session.user = user
+
+            // Fix type mismatch by ensuring nulls are converted to undefined
+            session.user = {
+                ...user,
+                name: user.name ?? undefined,
+                email: user.email ?? undefined,
+                image: user.image ?? undefined,
+            }
             return session
         },
     },
     secret: process.env.NEXTAUTH_SECRET,
-    pages: {
-        signIn: "/",
-    },
 })

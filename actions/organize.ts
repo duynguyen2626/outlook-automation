@@ -60,7 +60,7 @@ export async function organizeEmails(sourceFolderId: string = 'inbox', batchSize
         } else {
             response = await client.api(`/me/mailFolders/${sourceFolderId}/messages`)
                 .top(batchSize)
-                .select('id,subject,sender,receivedDateTime')
+                .select('id,subject,sender,receivedDateTime,isRead')
                 .orderby('receivedDateTime desc')
                 .get()
         }
@@ -82,7 +82,8 @@ export async function organizeEmails(sourceFolderId: string = 'inbox', batchSize
             const senderName = msg.sender?.emailAddress?.name || ""
 
             for (const rule of rules as Rule[]) {
-                if (checkRule(subject, sender, senderName, rule)) {
+                const isRead = msg.isRead ?? false
+                if (checkRule(subject, sender, senderName, isRead, rule)) {
                     console.log(`MATCH! Rule: ${rule.name}, Subject: ${subject}`);
 
                     try {

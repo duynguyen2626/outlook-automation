@@ -3,15 +3,19 @@ export interface Rule {
     name: string
     description?: string
     target_folder: string
+    sender_pattern?: string // Legacy or flat field
+    keywords?: string[]     // Legacy or flat field
     conditions: {
         keywords?: string[]
         senders?: string[]
         exclude_keywords?: string[]
         must_be_read?: boolean
+        unread_only?: boolean
     }
     categories?: string[]
     is_active: boolean
     source_folder?: string
+    created_at?: string
 }
 
 export interface ExecutionLog {

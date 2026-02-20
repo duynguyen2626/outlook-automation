@@ -21,6 +21,9 @@ export function checkRule(subject: string, sender: string, senderName: string, i
     // Check must_be_read
     if (rule.conditions.must_be_read && !isRead) return false
 
+    // Check unread_only
+    if (rule.conditions.unread_only && isRead) return false
+
     // Check Sender
     if (rule.conditions.senders && rule.conditions.senders.length > 0) {
         const matchSender = rule.conditions.senders.some(s => {
